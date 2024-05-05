@@ -9,14 +9,22 @@ const db=new pg.Client({
   user:"postgres",
   host:"localhost",
   database:"World",
-  password:"DummyPassword",
+  password:"Papadurki2604",
   port:5432,
 });
 db.connect();
 
 
 
-let countries=[];
+db.query("SELECT * FROM countries",(err,res)=>{
+  if(err){
+    console.log(err.stack);
+  }else{
+
+  }
+})
+
+let visitedCountries=[];
 let lastId;
 
 
@@ -24,11 +32,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/",  async (req, res) => {
-  countries = await db.query("SELECT * FROM visited_countries");
-  lastId = countries.rows[countries.rows.length-1].id;
+  visitedCountries = await db.query("SELECT * FROM visited_countries");
+  lastId =  visitedCountries.rows[ visitedCountries.rows.length-1].id;
+  console.log(lastId);
   const codes=[];
 
-  countries.rows.forEach(x=> {
+  visitedCountries.rows.forEach(x=> {
      codes.push(x.country_code)});
 
   res.render("index.ejs",{
@@ -40,14 +49,23 @@ app.get("/",  async (req, res) => {
 
 app.post("/add",async (req,res)=>{
   try{
-     const countryCode = req.body.country;
-     const text = 'INSERT INTO visited_countries VALUES($1,$2)';
-     const values=[lastId+1, countryCode];
-     const result =  await db.query(text,values);
+        
+    const firstQuery = await db.query("SELECT country_code FROM countries WHERE country_name = ANY ($1)", [ [req.body.country] ]);
+    const countryCode=firstQuery.rows[0].country_code;
+    console.log("----");
+    console.log(lastId);
+    console.log(typeof(lastId));
+ 
+   const text= 'INSERT INTO visited_countries VALUES($1,$2)';
+    const values=[lastId+1, countryCode];
+
+     
+    const secondQuery = await db.query(text,values);
      
     res.redirect("/");
-  }catch(error){6
-    console.log(error);
+    
+  }catch(error){
+    console.log(error.stack);
   }
 
 
