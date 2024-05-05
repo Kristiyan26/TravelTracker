@@ -50,18 +50,17 @@ app.get("/",  async (req, res) => {
 app.post("/add",async (req,res)=>{
   try{
         
-    const firstQuery = await db.query("SELECT country_code FROM countries WHERE country_name = ANY ($1)", [ [req.body.country] ]);
-    const countryCode=firstQuery.rows[0].country_code;
-    console.log("----");
-    console.log(lastId);
-    console.log(typeof(lastId));
- 
-   const text= 'INSERT INTO visited_countries VALUES($1,$2)';
-    const values=[lastId+1, countryCode];
+    //first way of making a query
+    const firstQuery = await db.query("SELECT country_code FROM countries WHERE country_name = $1",  [req.body.country] );
+    if(firstQuery.rows.length!==0){
+      const countryCode=firstQuery.rows[0].country_code;
 
-     
-    const secondQuery = await db.query(text,values);
-     
+      //second way of making a query.
+      const text= 'INSERT INTO visited_countries VALUES($1,$2)';
+      const values=[lastId+1, countryCode];
+      const secondQuery = await db.query(text,values);
+    }
+  
     res.redirect("/");
     
   }catch(error){
